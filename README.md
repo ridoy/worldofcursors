@@ -1,4 +1,5 @@
 **try it out:**
-npm install
-npm start
-load up localhost:3000 in two separate windows
+
+1. npm install && npm start
+
+2. load up localhost:3000 in two separate windows
