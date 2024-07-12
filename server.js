@@ -6,10 +6,13 @@ const app = express();
 const server = http.createServer(app);
 const io = socketIo(server);
 
+let userCount = 0;
 app.use(express.static('public'));
 
 io.on('connection', (socket) => {
-    console.log('A user connected');
+    userCount++;
+    io.emit('userCount', userCount);
+    console.log('A user connected. Current user count: ', userCount);
 
     socket.on('mousemove', (data) => {
         // Broadcast the cursor position to all other clients
@@ -17,7 +20,9 @@ io.on('connection', (socket) => {
     });
 
     socket.on('disconnect', () => {
-        console.log('A user disconnected');
+        userCount--;
+        io.emit('userCount', userCount);
+        console.log('A user disconnected. Current user count: ', userCount);
         socket.broadcast.emit('userDisconnected', { id: socket.id });
     });
 });
