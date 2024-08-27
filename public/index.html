@@ -11,11 +11,19 @@
             overflow: hidden;
             position: relative;
         }
+        #zombie-cursor {
+            position: absolute;
+            width: 16px;
+            height: 16px;
+            background: url("zombie_cursor.webp") no-repeat center center;
+            background-size: contain;
+            pointer-events: none;
+        }
         .cursor {
             position: absolute;
-            width: 16px; /* Adjust size as needed */
+            width: 16px;
             height: 16px;
-            background: url('cursor.webp') no-repeat center center;
+            background: url("cursor.webp") no-repeat center center;
             background-size: contain;
             pointer-events: none;
         }
@@ -34,28 +42,37 @@
 </head>
 <body>
     <div class="user-count"></div>
+    <div id="zombie-cursor"></div>
     <script src="/socket.io/socket.io.js"></script>
     <script>
         const socket = io();
 
         const cursors = {};
-        const userCountElement = document.querySelector('.user-count');
+        const userCountElement = document.querySelector(".user-count");
+        const zombieCursor = document.getElementById("zombie-cursor");
 
-        socket.on('mousemove', (data) => {
+        socket.on("zombieMove", (data) => {
+            const { x, y } = data;
+
+            zombieCursor.style.left = x + "px";
+            zombieCursor.style.top = y + "px"; 
+        })
+
+        socket.on("mousemove", (data) => {
             const { id, x, y } = data;
 
             if (!cursors[id]) {
-                const cursor = document.createElement('div');
-                cursor.className = 'cursor';
+                const cursor = document.createElement("div");
+                cursor.className = "cursor";
                 document.body.appendChild(cursor);
                 cursors[id] = cursor;
             }
 
-            cursors[id].style.left = x + 'px';
-            cursors[id].style.top = y + 'px';
+            cursors[id].style.left = x + "px";
+            cursors[id].style.top = y + "px";
         });
 
-        socket.on('userDisconnected', (data) => {
+        socket.on("userDisconnected", (data) => {
             const { id } = data;
             if (cursors[id]) {
                 cursors[id].remove();
@@ -63,15 +80,15 @@
             }
         });
 
-        socket.on('userCount', (count) => {
+        socket.on("userCount", (count) => {
             userCountElement.textContent = `Users: ${count}`;
         });
 
-        document.addEventListener('mousemove', (event) => {
+        document.addEventListener("mousemove", (event) => {
             const x = event.clientX;
             const y = event.clientY;
 
-            socket.emit('mousemove', { x, y });
+            socket.emit("mousemove", { x, y });
         });
     </script>
 </body>

@@ -12,13 +12,26 @@ const io = socketIo(server);
 let userCount = 0;
 app.use(express.static('public'));
 
+let zombieX = 0;
+let zombieY = 0;
+let targetX = 0;
+let targetY = 0;
+
 io.on('connection', (socket) => {
     userCount++;
     io.emit('userCount', userCount);
+    setInterval(() => {
+        zombieX += (targetX - zombieX) / 10;
+        zombieY += (targetY - zombieY) / 10;
+
+        io.emit('zombieMove', { x: zombieX, y: zombieY })
+    }, 100)
     console.log('A user connected. Current user count: ', userCount);
 
     socket.on('mousemove', (data) => {
         // Broadcast the cursor position to all other clients
+        targetX = data.x;
+        targetY = data.y;
         socket.broadcast.emit('mousemove', { id: socket.id, x: data.x, y: data.y });
     });
 
