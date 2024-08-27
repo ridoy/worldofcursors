@@ -14,24 +14,32 @@ app.use(express.static('public'));
 
 let zombieX = 0;
 let zombieY = 0;
-let targetX = 0;
-let targetY = 0;
+let totalX = 0;
+let totalY = 0;
+let users = {};
 
 io.on('connection', (socket) => {
     userCount++;
     io.emit('userCount', userCount);
     setInterval(() => {
-        zombieX += (targetX - zombieX) / 10;
-        zombieY += (targetY - zombieY) / 10;
+        zombieX += (totalX / userCount - zombieX) / 10;
+        zombieY += (totalY / userCount - zombieY) / 10;
 
         io.emit('zombieMove', { x: zombieX, y: zombieY })
     }, 100)
     console.log('A user connected. Current user count: ', userCount);
 
     socket.on('mousemove', (data) => {
+        // Remove old record from rolling total
+        if (users[socket.id]) {
+            totalX -= users[socket.id].x;
+            totalY -= users[socket.id].y;
+        }
+        // Update rolling total and persisted user data
+        totalX += data.x;
+        totalY += data.y;
+        users[socket.id] = { x: data.x, y: data.y }
         // Broadcast the cursor position to all other clients
-        targetX = data.x;
-        targetY = data.y;
         socket.broadcast.emit('mousemove', { id: socket.id, x: data.x, y: data.y });
     });
 
@@ -40,6 +48,7 @@ io.on('connection', (socket) => {
         io.emit('userCount', userCount);
         console.log('A user disconnected. Current user count: ', userCount);
         socket.broadcast.emit('userDisconnected', { id: socket.id });
+        delete users[socket.id]
     });
 });
 
